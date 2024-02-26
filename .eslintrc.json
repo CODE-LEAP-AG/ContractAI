@@ -1,0 +1,13 @@
+{
+  "plugins": [
+    "office-addins"
+  ],
+  "rules": {
+    "no-console": "warn",
+    "no-undef": "off",
+    "no-debugger": "warn"
+  },
+  "extends": [
+    "plugin:office-addins/react"
+  ]
+}
