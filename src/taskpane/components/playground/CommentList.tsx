@@ -1,6 +1,6 @@
 import * as React from "react";
-import { getComments, tryCatch } from "../office-document";
-import useEffectDataFetcher from "../hooks/useEffectDataFetcher";
+import { getComments, tryCatch } from "../../office-document";
+import useEffectDataFetcher from "../../hooks/useEffectDataFetcher";
 import { makeStyles, Button } from "@fluentui/react-components";
 import { Comment16Regular } from "@fluentui/react-icons";
 

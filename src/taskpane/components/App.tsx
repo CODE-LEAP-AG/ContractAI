@@ -1,10 +1,6 @@
 import * as React from "react";
-import Header from "./Header";
-import HeroList, { HeroListItem } from "./HeroList";
-import TextInsertion from "./TextInsertion";
-import { makeStyles } from "@fluentui/react-components";
-import { Ribbon24Regular, LockOpen24Regular, DesignIdeas24Regular, Comment16Regular } from "@fluentui/react-icons";
-import CommentList from "./CommentList";
+import { makeStyles, tokens, shorthands } from "@fluentui/react-components";
+import { Default as TabList } from "./demo/TabList";
 
 interface AppProps {
   title: string;
@@ -12,37 +8,32 @@ interface AppProps {
 
 const useStyles = makeStyles({
   root: {
+    ...shorthands.padding("0", "0.5em"),
     minHeight: "100vh",
+  },
+  title: {
+    ...shorthands.padding("5px"),
+    textAlign: "start",
+    fontWeight: "Bold",
+    color: tokens.colorNeutralForeground2BrandPressed,
+  },
+  tab: {
+    ...shorthands.padding("0", "0", "3px", "0"),
   },
 });
 
 const App = (props: AppProps) => {
   const styles = useStyles();
-  const listItems: HeroListItem[] = [
-    {
-      icon: <Ribbon24Regular />,
-      primaryText: "Achieve more with Office integration",
-    },
-    {
-      icon: <LockOpen24Regular />,
-      primaryText: "Unlock features and functionality",
-    },
-    {
-      icon: <DesignIdeas24Regular />,
-      primaryText: "Create and visualize like a pro",
-    },
-    {
-      icon: <Comment16Regular />,
-      primaryText: "Get comment documents",
-    },
-  ];
 
   return (
     <div className={styles.root}>
-      <Header logo="assets/logo-filled.png" title={props.title} message="Welcome to contract.ai" />
-      <HeroList message="Discover what this add-in can do for you today! I will upgrade this app" items={listItems} />
-      <TextInsertion />
-      <CommentList />
+      <div className={styles.title}>
+        <h2>{props.title}</h2>
+      </div>
+
+      <div className={styles.tab}>
+        <TabList />
+      </div>
     </div>
   );
 };

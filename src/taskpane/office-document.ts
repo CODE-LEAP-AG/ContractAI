@@ -20,9 +20,10 @@ export async function getComments(): Promise<Word.Interfaces.CommentCollectionDa
   let commentList: Word.Interfaces.CommentCollectionData;
   await Word.run(async (context) => {
     const comments = context.document.body.getComments();
-    comments.load({});
+    comments.load();
     await context.sync();
 
+    // get replies from comment
     for (const comment of comments.items) {
       const replies = comment.replies;
       replies.load();
