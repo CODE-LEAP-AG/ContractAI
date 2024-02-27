@@ -36,6 +36,35 @@ export async function getComments(): Promise<Word.Interfaces.CommentCollectionDa
   return commentList;
 }
 
+/**
+ * apply change from selected text
+ * @param newText
+ */
+export async function applyChangeSelection(newText: string) {
+  await Word.run(async (context) => {
+    const document = context.document;
+    const selectedRange = document.getSelection();
+    context.load(selectedRange, "text");
+    await context.sync();
+
+    selectedRange.insertText(newText, Word.InsertLocation.replace);
+  });
+}
+
+export async function getCommentsSelection() {
+  await Word.run(async (context) => {
+    const selectedComments = context.document.getSelection().getComments();
+    selectedComments.load("text");
+
+    await context.sync();
+    // eslint-disable-next-line office-addins/load-object-before-read
+    const comments = selectedComments.items;
+    for (const comment of comments) {
+      console.log(`Comment location: ${comment.toJSON()}`);
+    }
+  });
+}
+
 export async function tryCatch(callback: () => Promise<any>) {
   try {
     return await callback();

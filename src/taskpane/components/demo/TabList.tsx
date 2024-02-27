@@ -20,23 +20,24 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "column",
     justifyContent: "flex-start",
-    rowGap: "30px",
+    width: "100%",
   },
   tabList: {
     display: "flex",
-    columnGap: "1em",
-    backgroundColor: tokens.colorNeutralBackground3,
+    // backgroundColor: tokens.colorNeutralBackground3,
     width: "100%",
     ...shorthands.borderRadius("5px"),
   },
   tabItem: {
-    ...shorthands.padding("10px"),
+    display: "flex",
+    ...shorthands.margin("auto"),
+    width: "100%",
   },
 });
 
 export const Default: React.FC = (props: Partial<TabListProps>) => {
   const styles = useStyles();
-  const [selectedTab, setSelectedTab] = React.useState<TabValue>("");
+  const [selectedTab, setSelectedTab] = React.useState<TabValue>("review");
 
   const onTabSelect = (_: SelectTabEvent, data: SelectTabData) => {
     setSelectedTab(data.value);
