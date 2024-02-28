@@ -52,16 +52,22 @@ export async function applyChangeSelection(newText: string) {
 }
 
 export async function getCommentsSelection() {
-  await Word.run(async (context) => {
+  return await Word.run(async (context) => {
     const selectedComments = context.document.getSelection().getComments();
-    selectedComments.load("text");
-
+    selectedComments.load();
     await context.sync();
-    // eslint-disable-next-line office-addins/load-object-before-read
-    const comments = selectedComments.items;
-    for (const comment of comments) {
-      console.log(`Comment location: ${comment.toJSON()}`);
-    }
+
+    return selectedComments.items;
+  });
+}
+
+export async function addCommentSelection(newComment: string) {
+  return await Word.run(async (context) => {
+    const comment = context.document.getSelection().insertComment(newComment);
+    comment.load("text");
+    await context.sync();
+
+    return comment;
   });
 }
 

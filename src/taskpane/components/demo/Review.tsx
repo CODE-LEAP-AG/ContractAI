@@ -1,19 +1,16 @@
 import React, { useEffect } from "react";
-import {
-  Textarea,
-  makeStyles,
-  shorthands,
-  tokens,
-  Button,
-  Card,
-  CardFooter,
-} from "@fluentui/react-components";
+import { Textarea, makeStyles, shorthands, tokens, Button, Card, CardFooter } from "@fluentui/react-components";
 import type { TextareaProps } from "@fluentui/react-components";
-import { applyChangeSelection, getCommentsSelection, tryCatch } from "../../office-document";
+import { addCommentSelection, applyChangeSelection, getCommentsSelection, tryCatch } from "../../office-document";
+import { Comment16Regular, Save16Regular, Delete16Filled } from "@fluentui/react-icons";
 
 interface PhrasedProps {
   rephraseText: string[];
   originalText?: string;
+}
+
+interface ReviewCommentProps {
+  comments: Word.Interfaces.CommentData[];
 }
 
 const useStyles = makeStyles({
@@ -52,6 +49,10 @@ const useStyles = makeStyles({
     ...shorthands.padding("20px"),
     ...shorthands.borderRadius("10px"),
     backgroundColor: tokens.colorNeutralBackground1Hover,
+  },
+  collapseComment: {
+    display: "flex",
+    flexDirection: "column",
   },
 });
 
@@ -105,7 +106,7 @@ const PhrasedListText = (props: PhrasedProps) => {
   const { rephraseText } = props;
 
   const [listText, setListText] = React.useState<string[]>(rephraseText);
-  const [showComment, setShowComment] = React.useState(false);
+  const [commentItems, setCommentItems] = React.useState<Word.Interfaces.CommentData[]>([]);
   const applySelectText = async (newText: string) => {
     await tryCatch(() => applyChangeSelection(newText));
   };
@@ -119,8 +120,8 @@ const PhrasedListText = (props: PhrasedProps) => {
   };
 
   const getComments = async () => {
-    await tryCatch(() => getCommentsSelection());
-    setShowComment((val) => !val);
+    const data = await tryCatch(() => getCommentsSelection());
+    setCommentItems(data);
   };
 
   useEffect(() => {
@@ -135,37 +136,57 @@ const PhrasedListText = (props: PhrasedProps) => {
         <Card key={i} appearance="filled-alternative">
           <Textarea value={rephrase} appearance="filled-lighter-shadow" resize="vertical" />
           <CardFooter>
-            <Button appearance="primary" onClick={() => applySelectText(rephrase)}>
+            <Button appearance="primary" icon={<Save16Regular />} onClick={() => applySelectText(rephrase)}>
               Apply
             </Button>
-            <Button appearance="subtle" onClick={() => removeRephraseItem(i)}>
+            <Button appearance="subtle" icon={<Delete16Filled />} onClick={() => removeRephraseItem(i)}>
               Cancel
             </Button>
-            <Button appearance="outline" onClick={getComments}>
+            <Button appearance="transparent" icon={<Comment16Regular />} onClick={getComments}>
               Comments
             </Button>
           </CardFooter>
-          {showComment && <ShowComments />}
+          <ShowComments comments={commentItems} />
         </Card>
       ))}
     </>
   );
 };
 
-const ShowComments = () => {
+const ShowComments = (props: ReviewCommentProps) => {
   const styles = useStyles();
+  const { comments } = props;
+  const [commentValue, setCommentValue] = React.useState<string>("");
+
+  const handleAddComment = async () => {
+    const data = await tryCatch(() => addCommentSelection(commentValue));
+    comments.push(data);
+  };
+
   return (
     <Card>
-      <ul className={styles.showComment}>
-        <li>comment 1</li>
-        <li>comment 1</li>
-        <li>comment 1</li>
-        <li>comment 1</li>
-        <li>comment 1</li>
-      </ul>
-      <Textarea className={styles.inputText} appearance="outline" placeholder="Add comment here" resize="none" />
+      {comments.length > 0 ? (
+        <ul className={styles.showComment}>
+          {comments.map((item) => (
+            <li key={item.id}>{item.content}</li>
+          ))}
+        </ul>
+      ) : (
+        <></>
+      )}
+
+      <Textarea
+        value={commentValue}
+        className={styles.inputText}
+        appearance="outline"
+        placeholder="Add comment here"
+        resize="none"
+        onChange={(_, data) => setCommentValue(data.value)}
+      />
       <CardFooter>
-        <Button type="button">Add</Button>
+        <Button type="button" onClick={handleAddComment}>
+          Add
+        </Button>
       </CardFooter>
     </Card>
   );
