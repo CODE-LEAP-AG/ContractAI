@@ -71,6 +71,44 @@ export async function addCommentSelection(newComment: string) {
   });
 }
 
+export async function setDefaultTrackingMode() {
+  await Word.run(async (context) => {
+    context.document.changeTrackingMode = Word.ChangeTrackingMode.trackMineOnly;
+
+    await context.sync();
+
+    getChangeTrackingMode();
+  });
+}
+
+export async function getTrackedAllChanges() {
+  return await Word.run(async (context) => {
+    const body = context.document.body;
+    const trackedChanges = body.getTrackedChanges();
+    trackedChanges.load();
+    await context.sync();
+
+    return trackedChanges.toJSON();
+  });
+}
+
+async function getChangeTrackingMode() {
+  // Gets the current change tracking mode.
+  await Word.run(async (context) => {
+    const document = context.document;
+    document.load("changeTrackingMode");
+    await context.sync();
+
+    if (document.changeTrackingMode === Word.ChangeTrackingMode.trackMineOnly) {
+      console.log("Only my changes are being tracked.");
+    } else if (document.changeTrackingMode === Word.ChangeTrackingMode.trackAll) {
+      console.log("Everyone's changes are being tracked.");
+    } else {
+      console.log("No changes are being tracked.");
+    }
+  });
+}
+
 export async function tryCatch(callback: () => Promise<any>) {
   try {
     return await callback();

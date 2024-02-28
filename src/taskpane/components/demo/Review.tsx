@@ -1,17 +1,15 @@
-import React, { useEffect } from "react";
-import { Textarea, makeStyles, shorthands, tokens, Button, Card, CardFooter } from "@fluentui/react-components";
+import React from "react";
+import { Textarea, makeStyles, shorthands, tokens, Button, Card } from "@fluentui/react-components";
 import type { TextareaProps } from "@fluentui/react-components";
-import { addCommentSelection, applyChangeSelection, getCommentsSelection, tryCatch } from "../../office-document";
-import { Comment16Regular, Save16Regular, Delete16Filled } from "@fluentui/react-icons";
+import {
+  addCommentSelection,
+  applyChangeSelection,
+  getTrackedAllChanges,
+  setDefaultTrackingMode,
+  tryCatch,
+} from "../../office-document";
 
-interface PhrasedProps {
-  rephraseText: string[];
-  originalText?: string;
-}
-
-interface ReviewCommentProps {
-  comments: Word.Interfaces.CommentData[];
-}
+import ReviewEditedText from "./ReviewEditedText";
 
 const useStyles = makeStyles({
   reviewContainer: {
@@ -65,13 +63,24 @@ const Review: React.FC = () => {
   const onChange: TextareaProps["onChange"] = (_, data) => {
     setEditTextValue(data.value);
   };
-  const handlePhraseText = () => {
+  const handlePhraseText = async () => {
     if (!editTextValue) return;
     if (rephraseTextValue.includes(editTextValue)) return;
 
     const updatedArray = [...rephraseTextValue, editTextValue];
     setRephraseTextValue(updatedArray);
     setIsShowPhrasedText(true);
+
+    await tryCatch(() => setDefaultTrackingMode());
+    await tryCatch(() => applyChangeSelection(editTextValue));
+
+    // TODO: add generic comment data
+    const result: Word.Interfaces.TrackedChangeCollectionData = await tryCatch(() => getTrackedAllChanges());
+    for (const item of result.items) {
+      const comment = `I have  <b>${item.type === "None" ? "edited" : item.type}</b> ${item.text}`;
+      await tryCatch(() => addCommentSelection(comment));
+      console.log(item);
+    }
   };
 
   return (
@@ -96,99 +105,9 @@ const Review: React.FC = () => {
       </div>
 
       <div className={styles.cardRephrasedText}>
-        {isShowPhrasedText && rephraseTextValue.length > 0 && <PhrasedListText rephraseText={rephraseTextValue} />}
+        {isShowPhrasedText && rephraseTextValue.length > 0 && <ReviewEditedText editedText={rephraseTextValue} />}
       </div>
     </div>
-  );
-};
-
-const PhrasedListText = (props: PhrasedProps) => {
-  const { rephraseText } = props;
-
-  const [listText, setListText] = React.useState<string[]>(rephraseText);
-  const [commentItems, setCommentItems] = React.useState<Word.Interfaces.CommentData[]>([]);
-  const applySelectText = async (newText: string) => {
-    await tryCatch(() => applyChangeSelection(newText));
-  };
-
-  const removeRephraseItem = (index: number): void => {
-    const indexItem = rephraseText.findIndex((_, idx) => index === idx);
-    if (indexItem !== -1) {
-      rephraseText.splice(index, 1);
-      setListText([...rephraseText]);
-    }
-  };
-
-  const getComments = async () => {
-    const data = await tryCatch(() => getCommentsSelection());
-    setCommentItems(data);
-  };
-
-  useEffect(() => {
-    if (JSON.stringify(listText) !== JSON.stringify(rephraseText)) {
-      setListText([...rephraseText]);
-    }
-  }, [rephraseText]);
-
-  return (
-    <>
-      {listText.map((rephrase: string, i: number) => (
-        <Card key={i} appearance="filled-alternative">
-          <Textarea value={rephrase} appearance="filled-lighter-shadow" resize="vertical" />
-          <CardFooter>
-            <Button appearance="primary" icon={<Save16Regular />} onClick={() => applySelectText(rephrase)}>
-              Apply
-            </Button>
-            <Button appearance="subtle" icon={<Delete16Filled />} onClick={() => removeRephraseItem(i)}>
-              Cancel
-            </Button>
-            <Button appearance="transparent" icon={<Comment16Regular />} onClick={getComments}>
-              Comments
-            </Button>
-          </CardFooter>
-          <ShowComments comments={commentItems} />
-        </Card>
-      ))}
-    </>
-  );
-};
-
-const ShowComments = (props: ReviewCommentProps) => {
-  const styles = useStyles();
-  const { comments } = props;
-  const [commentValue, setCommentValue] = React.useState<string>("");
-
-  const handleAddComment = async () => {
-    const data = await tryCatch(() => addCommentSelection(commentValue));
-    comments.push(data);
-  };
-
-  return (
-    <Card>
-      {comments.length > 0 ? (
-        <ul className={styles.showComment}>
-          {comments.map((item) => (
-            <li key={item.id}>{item.content}</li>
-          ))}
-        </ul>
-      ) : (
-        <></>
-      )}
-
-      <Textarea
-        value={commentValue}
-        className={styles.inputText}
-        appearance="outline"
-        placeholder="Add comment here"
-        resize="none"
-        onChange={(_, data) => setCommentValue(data.value)}
-      />
-      <CardFooter>
-        <Button type="button" onClick={handleAddComment}>
-          Add
-        </Button>
-      </CardFooter>
-    </Card>
   );
 };
 
