@@ -1,28 +1,25 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { applyChangeSelection, getCommentsSelection, tryCatch } from "../../office-document";
 import { Button, Card, CardFooter, Textarea } from "@fluentui/react-components";
 import { Comment16Regular, Delete16Filled, Save16Regular } from "@fluentui/react-icons";
 import ReviewComment from "./ReviewComment";
 
-interface ReviewEditedTextProps {
-  editedText: string[];
-  originalText?: string;
+export interface ReviewEditedTextProps {
+  id: number;
+  updatedText: string;
+  originalText: string;
+  onRemovePhraseText?: (id: number) => void;
 }
 const ReviewEditedText = (props: ReviewEditedTextProps) => {
-  const { editedText } = props;
-
-  const [listText, setListText] = React.useState<string[]>(editedText);
+  const { updatedText, originalText, id, onRemovePhraseText } = props;
   const [commentItems, setCommentItems] = React.useState<Word.Interfaces.CommentData[]>([]);
+
   const applySelectText = async (newText: string) => {
     await tryCatch(() => applyChangeSelection(newText));
   };
 
-  const removeRephraseItem = (index: number): void => {
-    const indexItem = editedText.findIndex((_, idx) => index === idx);
-    if (indexItem !== -1) {
-      editedText.splice(index, 1);
-      setListText([...editedText]);
-    }
+  const removePhraseText = (id: number) => {
+    onRemovePhraseText(id);
   };
 
   const getComments = async () => {
@@ -30,34 +27,25 @@ const ReviewEditedText = (props: ReviewEditedTextProps) => {
     setCommentItems(data);
   };
 
-  useEffect(() => {
-    if (JSON.stringify(listText) !== JSON.stringify(editedText)) {
-      setListText([...editedText]);
-    }
-  }, [editedText]);
-
   return (
-    <>
-      {listText.map((rephrase: string, i: number) => (
-        <Card key={i} appearance="filled-alternative">
-          <Textarea value={rephrase} appearance="filled-lighter-shadow" resize="vertical" />
+    <Card appearance="filled-alternative">
+      <Textarea value={originalText} appearance="filled-lighter" resize="vertical" />
+      <Textarea value={updatedText} appearance="filled-darker" resize="vertical" />
 
-          <CardFooter>
-            <Button appearance="primary" icon={<Save16Regular />} onClick={() => applySelectText(rephrase)}>
-              Apply
-            </Button>
-            <Button appearance="subtle" icon={<Delete16Filled />} onClick={() => removeRephraseItem(i)}>
-              Cancel
-            </Button>
-            <Button appearance="transparent" icon={<Comment16Regular />} onClick={getComments}>
-              Comments
-            </Button>
-          </CardFooter>
+      <CardFooter>
+        <Button appearance="primary" icon={<Save16Regular />} onClick={() => applySelectText(updatedText)}>
+          Apply
+        </Button>
+        <Button appearance="subtle" icon={<Delete16Filled />} onClick={() => removePhraseText(id)}>
+          Cancel
+        </Button>
+        {/*<Button appearance="transparent" icon={<Comment16Regular />} onClick={getComments}>*/}
+        {/*  Comments*/}
+        {/*</Button>*/}
+      </CardFooter>
 
-          <ReviewComment comments={commentItems} />
-        </Card>
-      ))}
-    </>
+      {/*<ReviewComment comments={commentItems} />*/}
+    </Card>
   );
 };
 

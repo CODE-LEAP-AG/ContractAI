@@ -1,15 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Textarea, makeStyles, shorthands, tokens, Button, Card } from "@fluentui/react-components";
 import type { TextareaProps } from "@fluentui/react-components";
-import {
-  addCommentSelection,
-  applyChangeSelection,
-  getTrackedAllChanges,
-  setDefaultTrackingMode,
-  tryCatch,
-} from "../../office-document";
+import { applyChangeSelection, setDefaultTrackingMode, tryCatch } from "../../office-document";
 
-import ReviewEditedText from "./ReviewEditedText";
+import ReviewEditedText, { ReviewEditedTextProps } from "./ReviewEditedText";
 
 const useStyles = makeStyles({
   reviewContainer: {
@@ -56,39 +50,51 @@ const useStyles = makeStyles({
 
 const Review: React.FC = () => {
   const styles = useStyles();
-  const [editTextValue, setEditTextValue] = React.useState<string>("");
-  const [rephraseTextValue, setRephraseTextValue] = React.useState<string[]>([]);
+  const [count, setCount] = React.useState(0);
+  const [editedTextValue, setEditedTextValue] = React.useState<string>("");
+  const [rephraseTextValue, setRephraseTextValue] = React.useState<ReviewEditedTextProps[]>([]);
   const [isShowPhrasedText, setIsShowPhrasedText] = React.useState(false);
 
   const onChange: TextareaProps["onChange"] = (_, data) => {
-    setEditTextValue(data.value);
+    setEditedTextValue(data.value);
   };
-  const handlePhraseText = async () => {
-    if (!editTextValue) return;
-    if (rephraseTextValue.includes(editTextValue)) return;
 
-    const updatedArray = [...rephraseTextValue, editTextValue];
-    setRephraseTextValue(updatedArray);
-    setIsShowPhrasedText(true);
+  const handlePhraseText = async () => {
+    if (!editedTextValue) return;
 
     await tryCatch(() => setDefaultTrackingMode());
-    await tryCatch(() => applyChangeSelection(editTextValue));
+    const result: ReviewEditedTextProps = await tryCatch(() => applyChangeSelection(editedTextValue));
 
-    // TODO: add generic comment data
-    const result: Word.Interfaces.TrackedChangeCollectionData = await tryCatch(() => getTrackedAllChanges());
-    for (const item of result.items) {
-      const comment = `I have  <b>${item.type === "None" ? "edited" : item.type}</b> ${item.text}`;
-      await tryCatch(() => addCommentSelection(comment));
-      console.log(item);
-    }
+    setCount((prevCount) => prevCount + 1);
+    setIsShowPhrasedText(true);
+    setRephraseTextValue((prevRephraseTextValue) => [
+      ...prevRephraseTextValue,
+      {
+        id: count,
+        originalText: result.originalText,
+        updatedText: result.updatedText,
+      },
+    ]);
+    setEditedTextValue("");
   };
+
+  const handleRemovePhraseText = (id: number) => {
+    const index = rephraseTextValue.findIndex((item) => item.id === id);
+    if (index !== -1) {
+      rephraseTextValue.splice(index, 1);
+    }
+
+    setRephraseTextValue([...rephraseTextValue]);
+  };
+
+  useEffect(() => {}, [rephraseTextValue]);
 
   return (
     <div className={styles.reviewContainer}>
       <div className={styles.fieldWrapper}>
         <Card appearance="subtle">
           <Textarea
-            value={editTextValue}
+            value={editedTextValue}
             className={styles.inputText}
             appearance="outline"
             placeholder="Enter a promt here"
@@ -105,7 +111,17 @@ const Review: React.FC = () => {
       </div>
 
       <div className={styles.cardRephrasedText}>
-        {isShowPhrasedText && rephraseTextValue.length > 0 && <ReviewEditedText editedText={rephraseTextValue} />}
+        {isShowPhrasedText &&
+          rephraseTextValue.length > 0 &&
+          rephraseTextValue.map((item) => (
+            <ReviewEditedText
+              key={item.id}
+              id={item.id}
+              originalText={item.originalText}
+              updatedText={item.updatedText}
+              onRemovePhraseText={(id: number) => handleRemovePhraseText(id)}
+            />
+          ))}
       </div>
     </div>
   );
