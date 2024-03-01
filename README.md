@@ -26,8 +26,8 @@ npm run start:web -- --document <document_web_url>
 ## Documents
 
 - Fluent UI components: https://react.fluentui.dev/?path=/docs/concepts-introduction--page
-- Word API: https://learn.microsoft.com/en-us/javascript/api/word/word.commentcollection?view=word-js-preview
-- Some third-party libraries like `office-js-helper` or `office-js-addin-ui` offer helper functions for accessing comments in Word documents.
+- Word API: https://learn.microsoft.com/en-us/javascript/api/word?view=word-js-preview
+- Yo CLI generate template project: https://github.com/OfficeDev/generator-office
 
 ### Reacts
 
@@ -37,3 +37,10 @@ npm run start:web -- --document <document_web_url>
 ### Playground
 
 - Public doc: https://1drv.ms/w/s!Asfc4X8m0zwwoyXjDj8WJAsOx-NH?e=q3YK9W
+
+### APIs
+
+#### Current usage
+- Comments: https://learn.microsoft.com/en-us/javascript/api/word/word.comment?view=word-js-preview
+- Selection range: https://learn.microsoft.com/en-us/javascript/api/word/word.range?view=word-js-preview
+- Tracking change: https://learn.microsoft.com/en-us/javascript/api/word/word.trackedchange?view=word-js-preview
